@@ -62,8 +62,6 @@ defmodule JllyBot.Discord.Pronoun do
   end
 
   def send_chooce_text(channel_id) do
-    IO.inspect(channel_id)
-
     buttons = create_buttons()
 
     message =
@@ -79,19 +77,17 @@ defmodule JllyBot.Discord.Pronoun do
   def do_button(
         id,
         %Nostrum.Struct.Interaction{
-          member: %{roles: roles, user: %Struct.User{id: member_id}},
+          member: %{roles: roles, user: %Nostrum.Struct.User{id: member_id}},
           guild_id: guild_id
         }
       ) do
     with role when role != nil <- Map.get(@roles_id, id) do
       if Enum.member?(roles, role) do
         Api.remove_guild_member_role(guild_id, member_id, role, "User pronoun change")
-        |> IO.inspect()
 
         "Removed pronoun: #{get_role_name(id)}"
       else
         Api.add_guild_member_role(guild_id, member_id, role, "User pronoun change")
-        |> IO.inspect()
 
         "Added pronoun: #{get_role_name(id)}"
       end

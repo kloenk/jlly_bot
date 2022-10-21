@@ -22,7 +22,8 @@ defmodule JllyBot.Discord do
        }
      ]},
     {"links", "Send the links", []},
-    {"pronoun-message", "Send the Pronoun chooser message", []}
+    {"pronoun-message", "Send the Pronoun chooser message", []},
+    {"topic-message", "Send the Topic chooser message", []}
   ]
 
   def do_command(%{guild_id: _guild_id, data: %{name: "tiktok-list"}}) do
@@ -123,6 +124,9 @@ defmodule JllyBot.Discord do
   def do_command(%{channel_id: channel_id, data: %{name: "pronoun-message"}}),
     do: JllyBot.Discord.Pronoun.send_chooce_text(channel_id)
 
+  def do_command(%{channel_id: channel_id, data: %{name: "topic-message"}}),
+    do: JllyBot.Discord.Topic.send_chooce_text(channel_id)
+
   def do_command(
         %Nostrum.Struct.Interaction{
           data: %Nostrum.Struct.ApplicationCommandInteractionData{custom_id: id}
@@ -133,6 +137,9 @@ defmodule JllyBot.Discord do
     cond do
       Enum.member?(JllyBot.Discord.Pronoun.get_keys(), id) ->
         JllyBot.Discord.Pronoun.do_button(id, interaction)
+
+      Enum.member?(JllyBot.Discord.Topic.get_button_keys(), id) ->
+        JllyBot.Discord.Topic.do_button(id, interaction)
 
       true ->
         "???"
@@ -166,7 +173,19 @@ defmodule JllyBot.Discord do
   def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
     content = do_command(interaction)
 
-    Api.create_interaction_response(interaction, %{type: 4, data: %{content: content, flags: 64}})
+    msg = build_response(content)
+
+    Api.create_interaction_response(interaction, msg)
+    |> IO.inspect()
+
+    # FIXME: handle response
+  end
+
+  defp build_response(nil), do: %{type: 1}
+  defp build_response(map) when is_map(map), do: map
+
+  defp build_response(message) when is_binary(message) do
+    %{type: 4, data: %{content: message, flags: 64}}
   end
 
   @impl true
