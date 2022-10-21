@@ -1,6 +1,6 @@
 import Config
 
-#config :nostrum,
+# config :nostrum,
 #  gateway_intents: [
 #    :guild_messages,
 #    :GUILD_SCHEDULED_EVENTS

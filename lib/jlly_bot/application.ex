@@ -13,5 +13,4 @@ defmodule JllyBot.Application do
     opts = [strategy: :one_for_one, name: JllyBot.Supervisor]
     Supervisor.start_link(children, opts)
   end
-
 end

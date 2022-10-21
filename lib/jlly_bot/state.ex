@@ -42,8 +42,10 @@ defmodule JllyBot.State do
   @impl GenServer
   def handle_call({:add_tiktok_sub, guild_id, tiktok_id}, _from, state) do
     guild = Map.get(state, guild_id, %{})
-    guild_tiktoks = Map.get(guild, :tiktok, %{})
-    |> Map.put_new(tiktok_id, 0)
+
+    guild_tiktoks =
+      Map.get(guild, :tiktok, %{})
+      |> Map.put_new(tiktok_id, 0)
 
     guild = Map.put(guild, :tiktok, guild_tiktoks)
     state = Map.put(state, guild_id, guild)
