@@ -7,7 +7,13 @@ defmodule JllyBot.MixProject do
       version: "0.1.0",
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases(),
+      releases: [
+        jlly_bot: [
+          config_providers: [{JllyBot.ReleaseRuntimeProvider, []}]
+        ]
+      ]
     ]
   end
 
@@ -27,6 +33,13 @@ defmodule JllyBot.MixProject do
       {:httpoison, "~> 1.8"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+    ]
+  end
+
+  defp aliases do
+    [
+      # run `mix setup` in all child apps
+      fmt: ["cmd mix format"]
     ]
   end
 end
