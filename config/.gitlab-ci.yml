@@ -1,0 +1,11 @@
+stages:
+  - build
+
+
+nix:
+  stage: build
+  needs: []
+  tags:
+    - nix
+  script:
+    - nix build

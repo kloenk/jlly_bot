@@ -36,7 +36,7 @@ defmodule JllyBot.Discord.NewContent do
 
     Api.create_message(@publish_channel, embed: embed, content: "<@&#{@mention_role}>")
 
-    "command"
+    "Published new patreon post hint"
   end
 
   defp get_field_value(nil, _), do: nil
