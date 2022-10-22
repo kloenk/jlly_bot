@@ -8,6 +8,7 @@ defmodule JllyBot.Application do
     prime_atoms()
 
     children = [
+      JllyBot.Repo,
       JllyBot.State,
       JllyBot.Discord,
       {Task.Supervisor, name: JllyBot.Discord.RoleUpdateSupervisor}
