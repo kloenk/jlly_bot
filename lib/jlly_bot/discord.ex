@@ -23,8 +23,31 @@ defmodule JllyBot.Discord do
      ]},
     {"links", "Send the links", []},
     {"pronoun-message", "Send the Pronoun chooser message", []},
-    {"topic-message", "Send the Topic chooser message", []}
+    {"topic-message", "Send the Topic chooser message", []},
+    {"new-patreon", "Create a new patreon post anouncement",
+     [
+       %{
+         # ApplicationCommandType::STRING
+         type: 3,
+         name: "link",
+         description: "link to new post",
+         required: false
+       },
+       %{
+         # ApplicationCommandType::STRING
+         type: 3,
+         name: "description",
+         description: "Post title/description of the new post",
+         required: false
+       }
+     ]}
   ]
+
+  @command_module %{
+    "pronoun-message" => JllyBot.Discord.Pronoun,
+    "topic-message" => JllyBot.Discord.Topic,
+    "new-patreon" => JllyBot.Discord.NewContent
+  }
 
   def do_command(%{guild_id: _guild_id, data: %{name: "tiktok-list"}}) do
     # TODO: implement
@@ -121,11 +144,20 @@ defmodule JllyBot.Discord do
     "Links send"
   end
 
-  def do_command(%{channel_id: channel_id, data: %{name: "pronoun-message"}}),
-    do: JllyBot.Discord.Pronoun.send_chooce_text(channel_id)
+  def do_command(
+        %Nostrum.Struct.Interaction{
+          data: %Nostrum.Struct.ApplicationCommandInteractionData{name: name}
+        } = interaction
+      )
+      when is_binary(name) do
+    mod = Map.get(@command_module, name)
 
-  def do_command(%{channel_id: channel_id, data: %{name: "topic-message"}}),
-    do: JllyBot.Discord.Topic.send_chooce_text(channel_id)
+    if mod != nil do
+      apply(mod, :do_command, [name, interaction])
+    else
+      "ERROR"
+    end
+  end
 
   def do_command(
         %Nostrum.Struct.Interaction{

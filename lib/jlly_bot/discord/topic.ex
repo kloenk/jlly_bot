@@ -64,7 +64,7 @@ defmodule JllyBot.Discord.Topic do
     |> Map.values()
   end
 
-  def send_chooce_text(channel_id) do
+  def do_command("topic-message", %Struct.Interaction{channel_id: channel_id}) do
     buttons =
       Component.ActionRow.action_row([
         Component.Button.interaction_button("Select topics", :topic_picker)

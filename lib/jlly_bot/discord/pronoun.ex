@@ -61,7 +61,7 @@ defmodule JllyBot.Discord.Pronoun do
     [prow, srow]
   end
 
-  def send_chooce_text(channel_id) do
+  def do_command("pronoun-message", %Struct.Interaction{channel_id: channel_id}) do
     buttons = create_buttons()
 
     message =
