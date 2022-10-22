@@ -135,7 +135,7 @@ in {
 
         ProtectSystem = "strict";
 
-        EnvironmentFile = [ cfg.env ];
+        EnvironmentFile = lib.optional (cfg.env != null) cfg.env;
       };
     };
 
