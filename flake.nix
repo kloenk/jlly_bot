@@ -58,5 +58,4 @@
         default = self.nixosModules.jlly_bot;
       };
     };
-
 }

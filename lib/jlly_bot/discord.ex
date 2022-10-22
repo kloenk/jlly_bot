@@ -22,7 +22,69 @@ defmodule JllyBot.Discord do
        }
      ]},
     {"links", "Send the links", []},
-    {"pronoun-message", "Send the Pronoun chooser message", []},
+    {"pronoun", "Pronoun management",
+     [
+       %{
+         type: 1,
+         name: "prompt",
+         description: "send promtp"
+       },
+       %{
+         type: 2,
+         name: "config",
+         description: "Pronoun config",
+         options: [
+           %{
+             name: "default",
+             type: 1,
+             description: "load default pronouns"
+           },
+           %{
+             name: "remove-all",
+             type: 1,
+             description: "remove all pronouns"
+           },
+           %{
+             name: "add",
+             type: 1,
+             description: "add a new pronoun",
+             options: [
+               %{
+                 type: 3,
+                 name: "key",
+                 description: "Key to use internaly",
+                 required: true
+               },
+               %{
+                 type: 3,
+                 name: "name",
+                 description: "Name of the pronoun",
+                 required: false
+               },
+               %{
+                 type: 3,
+                 name: "color",
+                 description: "Color of the new group",
+                 required: false
+               }
+             ]
+           },
+           %{
+             name: "remove",
+             type: 1,
+             description: "Remove pronoun",
+             options: [
+               %{
+                 type: 8,
+                 name: "pronoun",
+                 description: "Role to remove",
+                 required: true
+               }
+             ]
+           }
+         ]
+       }
+     ]},
     {"topic-message", "Send the Topic chooser message", []},
     {"new-patreon", "Create a new patreon post anouncement",
      [
@@ -45,8 +107,13 @@ defmodule JllyBot.Discord do
 
   @command_module %{
     "pronoun-message" => JllyBot.Discord.Pronoun,
+    "pronoun" => JllyBot.Discord.Pronoun,
     "topic-message" => JllyBot.Discord.Topic,
     "new-patreon" => JllyBot.Discord.NewContent
+  }
+
+  @component_module %{
+    "pronoun" => JllyBot.Discord.Pronoun
   }
 
   def do_command(%{guild_id: _guild_id, data: %{name: "tiktok-list"}}) do
@@ -118,7 +185,7 @@ defmodule JllyBot.Discord do
       |> put_url("https://open.spotify.com/playlist/7JxTDL94Frpmc053vrJlnt?si=e59b2c8f6ef54b18")
       |> put_color(0x1DB954)
 
-    tips = %Nostrum.Struct.Embed{}
+    # tips = %Nostrum.Struct.Embed{}
     # |> put_title("Jessys Instagram")
     # |> put_url("http://paypal.me/billyundjessy")
     # |> put_color(0xC13584)
@@ -164,19 +231,30 @@ defmodule JllyBot.Discord do
           data: %Nostrum.Struct.ApplicationCommandInteractionData{custom_id: id}
         } = interaction
       ) do
-    id = String.to_existing_atom(id)
+    [mod, key] = String.split(id, "_", parts: 2)
 
-    cond do
-      Enum.member?(JllyBot.Discord.Pronoun.get_keys(), id) ->
-        JllyBot.Discord.Pronoun.do_button(id, interaction)
-
-      Enum.member?(JllyBot.Discord.Topic.get_button_keys(), id) ->
-        JllyBot.Discord.Topic.do_button(id, interaction)
-
-      true ->
-        "???"
-    end
+    Map.fetch!(@component_module, mod)
+    |> apply(:do_component, [key, interaction])
   end
+
+  # def do_command(
+  #      %Nostrum.Struct.Interaction{
+  #        data: %Nostrum.Struct.ApplicationCommandInteractionData{custom_id: id}
+  #      } = interaction
+  #    ) do
+  #  id = String.to_existing_atom(id)
+
+  #  cond do
+  #    Enum.member?(JllyBot.Discord.Pronoun.get_keys(), id) ->
+  #      JllyBot.Discord.Pronoun.do_button(id, interaction)
+
+  #    Enum.member?(JllyBot.Discord.Topic.get_button_keys(), id) ->
+  #      JllyBot.Discord.Topic.do_button(id, interaction)
+
+  #    true ->
+  #      "???"
+  #  end
+  # end
 
   def create_guild_commands(guild_id) do
     Enum.each(@commands, fn {name, description, options} ->
@@ -185,6 +263,10 @@ defmodule JllyBot.Discord do
         description: description,
         options: options
       })
+      |> case do
+        {:ok, _} -> nil
+        v -> IO.inspect(v)
+      end
     end)
   end
 
@@ -213,7 +295,7 @@ defmodule JllyBot.Discord do
     # FIXME: handle response
   end
 
-  defp build_response(nil), do: %{type: 1}
+  defp build_response(nil), do: %{type: 4, data: %{content: "Done", flags: 64}}
   defp build_response(map) when is_map(map), do: map
 
   defp build_response(message) when is_binary(message) do
@@ -226,5 +308,13 @@ defmodule JllyBot.Discord do
     # |> IO.inspect()
 
     :noop
+  end
+
+  def parse_options(options) when is_list(options) do
+    options
+    |> Enum.map(fn %Nostrum.Struct.ApplicationCommandInteractionDataOption{name: name} = value ->
+      {name, value}
+    end)
+    |> Enum.into(%{})
   end
 end

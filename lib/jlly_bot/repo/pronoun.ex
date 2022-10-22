@@ -6,11 +6,11 @@ defmodule JllyBot.Repo.Pronoun do
   alias JllyBot.Repo
 
   schema "pronouns" do
-    field(:guild_id, :integer)
-    field(:role_id, :integer)
-    field(:key, :string)
-    field(:name, :string)
-    field(:primary, :boolean, default: true)
+    field :guild_id, :integer
+    field :role_id, :integer
+    field :key, :string
+    field :name, :string
+    field :primary, :boolean, default: true
   end
 
   def create_changeset(pronoun \\ %__MODULE__{}, attrs) do

@@ -6,7 +6,12 @@ defmodule JllyBot.Role do
   alias Nostrum.Api
   alias Nostrum.Struct
 
+  @spec create_role(atom() | nil, non_neg_integer | Nostrum.Struct.Guild.t(), String, keyword) ::
+          {:error, any} | {:ok, JllyBot.Repo.Role.t()}
   def create_role(module \\ nil, guild, name, opts \\ [])
+
+  def create_role(module, %Struct.Guild{id: guild_id}, name, opts),
+    do: create_role(module, guild_id, name, opts)
 
   def create_role(module, guild_id, name, opts) when is_number(guild_id) and is_binary(name) do
     opts =
@@ -34,7 +39,6 @@ defmodule JllyBot.Role do
 
   @spec remove_role(JllyBot.Repo.Role.t()) :: {:ok, Repo.Role.t()} | Nostrum.Api.error()
   def remove_role(%Repo.Role{role_id: role_id, guild_id: guild, module: module} = role) do
-    IO.warn("foo")
     reason = get_reason_text(module)
 
     with {:ok} <- Api.delete_guild_role(guild, role_id, reason) do
@@ -42,6 +46,19 @@ defmodule JllyBot.Role do
     else
       v -> v
     end
+  end
+
+  def remove_all(guild, reason \\ nil) do
+    # Repo.delete_all(Repo.Role, [guild_id: guild])
+    get_roles(guild)
+    |> Stream.map(fn %Repo.Role{guild_id: guild, role_id: role_id} = role ->
+      Api.delete_guild_role(guild, role_id, reason)
+      |> case do
+        {:ok} -> Repo.delete(role)
+        v -> v
+      end
+    end)
+    |> Enum.into([])
   end
 
   @spec add_role(
@@ -69,6 +86,12 @@ defmodule JllyBot.Role do
 
   def get_role(guild, role) when is_number(guild) and is_number(role) do
     Repo.get_by(Repo.Role, guild_id: guild, role_id: role)
+  end
+
+  def get_roles(%Struct.Guild{id: guild}), do: get_roles(guild)
+
+  def get_roles(guild) when is_number(guild) do
+    Repo.all(Repo.Role, guild_id: guild)
   end
 
   def get_reason(JllyBot.Pronoun), do: "Pronoun roles"
