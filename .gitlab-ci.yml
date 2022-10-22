@@ -8,4 +8,4 @@ nix:
   tags:
     - nix
   script:
-    - nix build
+    - nix --extra-experimental-features 'nix-command flakes' build -L
