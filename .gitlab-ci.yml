@@ -1,10 +1,19 @@
 stages:
+  - test
   - build
 
 
+nix-check:
+  stage: test
+  needs: []
+  tags:
+    - nix
+  script:
+    - nix --extra-experimental-features 'nix-command flakes' flake check
+
 nix:
   stage: build
-  needs: []
+  needs: [ ]
   tags:
     - nix
   script:
