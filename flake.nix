@@ -34,7 +34,7 @@
             mixDeps = packages.fetchMixDeps {
               pname = "mix-deps-${pname}";
               inherit src mixEnv version;
-              sha256 = "sha256-aF16VFfDHHV9YTP6wtH4qmvmNdDmte6MSgqXGbJPgME=";
+              sha256 = "sha256-dOuiabcQ5AMVKZWWz3R0jL2sZyiEFBvuInQBgYOMIN0=";
             };
           in packages.mixRelease {
             inherit pname version src mixEnv;
@@ -58,5 +58,4 @@
         default = self.nixosModules.jlly_bot;
       };
     };
-
 }

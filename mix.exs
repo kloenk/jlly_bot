@@ -30,7 +30,15 @@ defmodule JllyBot.MixProject do
     [
       {:nostrum, "~> 0.6"},
       {:jason, "~> 1.2"},
-      {:httpoison, "~> 1.8"}
+      {:httpoison, "~> 1.8"},
+
+      # Database
+      {:ecto, "~> 3.8"},
+      {:ecto_sql, "~> 3.0"},
+      {:postgrex, ">= 0.0.0"},
+
+      # Gettext
+      {:gettext, "~> 0.20"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

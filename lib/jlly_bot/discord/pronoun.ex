@@ -1,99 +1,230 @@
 defmodule JllyBot.Discord.Pronoun do
   require Logger
+  require JllyBot.Gettext
+
+  alias JllyBot.Repo
+  alias JllyBot.Pronoun
 
   import Nostrum.Struct.Embed
 
-  alias Nostrum.Struct.Component
   alias Nostrum.Struct
+  alias Nostrum.Struct.Component
   alias Nostrum.Api
 
-  @roles_id %{
-    pronoun_they: 1_011_696_492_433_657_866,
-    pronoun_she: 1_011_696_493_184_426_055,
-    pronoun_he: 1_011_696_493_868_105_809,
-    pronoun_any: 1_011_696_491_456_364_695,
-    pronoun_ask: 1_011_696_491_888_382_003
-  }
+  defp create_buttons(guild) do
+    pronouns =
+      guild
+      |> Pronoun.get_pronouns()
 
-  @roles_name %{
-    pronoun_they: "They/Them",
-    pronoun_she: "She/Her",
-    pronoun_he: "He/Him",
-    pronoun_any: "Any",
-    pronoun_ask: "Ask Me"
-  }
-
-  defp get_role_name(id) do
-    Map.get_lazy(@roles_name, id, fn ->
-      Logger.warn("Name for role #{id} not found")
-      "ERROR"
-    end)
-  end
-
-  def get_keys() do
-    @roles_id
-    |> Map.keys()
-  end
-
-  defp create_button(id, style),
-    do: Component.Button.interaction_button(Map.fetch!(@roles_name, id), id, style: style)
-
-  defp create_buttons(list, style \\ 1) do
-    list
-    |> Enum.map(fn id -> create_button(id, style) end)
-    |> Enum.into([])
-  end
-
-  def create_buttons() do
-    # Primary row
-    prow =
-      [:pronoun_they, :pronoun_she, :pronoun_he]
-      |> create_buttons()
+    primary =
+      pronouns
+      |> Enum.filter(fn %Repo.Pronoun{primary: p} -> p end)
+      |> Stream.map(&create_button/1)
+      |> Enum.into([])
       |> Component.ActionRow.action_row()
 
-    # secondary row
-    # TODO: button to add own pronouns
-    srow =
-      [:pronoun_any, :pronoun_ask]
-      |> create_buttons(2)
+    secondary =
+      pronouns
+      |> Enum.filter(fn %Repo.Pronoun{primary: p} -> !p end)
+      |> Stream.map(&create_button/1)
+      |> Enum.into([])
       |> Component.ActionRow.action_row()
 
-    [prow, srow]
+    [primary, secondary]
   end
 
-  def do_command("pronoun-message", %Struct.Interaction{channel_id: channel_id}) do
-    buttons = create_buttons()
+  defp create_button(%Repo.Pronoun{primary: primary, key: key} = pronoun) do
+    style =
+      if primary do
+        1
+      else
+        2
+      end
+
+    Pronoun.get_label(pronoun)
+    |> Component.Button.interaction_button("pronoun_#{key}", style: style)
+  end
+
+  def do_command(
+        "pronoun",
+        %Struct.Interaction{
+          guild_id: guild,
+          channel_id: channel_id,
+          data: %Struct.ApplicationCommandInteractionData{
+            options: [%Struct.ApplicationCommandInteractionDataOption{name: "prompt"} | _]
+          }
+        }
+      ) do
+    buttons = create_buttons(guild)
 
     message =
       %Nostrum.Struct.Embed{}
-      |> put_title("👋 Hey there! What are your pronouns?")
-      |> put_description("Use the buttons below to select your pronouns.")
+      |> put_title(JllyBot.Gettext.dgettext("pronoun", "👋 Hey there! What are your pronouns?"))
+      |> put_description(
+        JllyBot.Gettext.dgettext("pronoun", "Use the buttons below to select your pronouns.")
+      )
       |> put_color(0x00F2EA)
 
     Api.create_message!(channel_id, embeds: [message], components: buttons)
-    "Created Buttons"
+    nil
   end
 
-  def do_button(
-        id,
-        %Nostrum.Struct.Interaction{
-          member: %{roles: roles, user: %Nostrum.Struct.User{id: member_id}},
-          guild_id: guild_id
-        }
+  def do_command(
+        "pronoun",
+        %Struct.Interaction{
+          data: %Struct.ApplicationCommandInteractionData{
+            options: [
+              %Struct.ApplicationCommandInteractionDataOption{name: "config", options: options}
+            ]
+          }
+        } = interaction
       ) do
-    with role when role != nil <- Map.get(@roles_id, id) do
-      if Enum.member?(roles, role) do
-        Api.remove_guild_member_role(guild_id, member_id, role, "User pronoun change")
+    do_option(interaction, options)
+  end
 
-        "Removed pronoun: #{get_role_name(id)}"
-      else
-        Api.add_guild_member_role(guild_id, member_id, role, "User pronoun change")
+  defp do_option(%Struct.Interaction{guild_id: guild_id}, [
+         %Struct.ApplicationCommandInteractionDataOption{name: "default"}
+       ]) do
+    Pronoun.create_default_pronouns(guild_id)
+    |> case do
+      {:ok, pronouns} ->
+        JllyBot.Gettext.dgettext("pronoun", "Created %{num} pronouns from defaul set",
+          num: Enum.count(pronouns)
+        )
 
-        "Added pronoun: #{get_role_name(id)}"
+      {:error, error, ok} ->
+        JllyBot.Gettext.dgettext(
+          "prooun",
+          """
+          Could not create all default Pronouns.
+          Created %{ok_num} pronouns from the deault set.
+          Failed pronouns: %{failed}
+          """,
+          ok_num: Enum.count(ok),
+          failed: Enum.count(error)
+        )
+    end
+  end
+
+  defp do_option(%Struct.Interaction{guild_id: guild}, [
+         %Struct.ApplicationCommandInteractionDataOption{name: "add", options: options}
+       ]) do
+    options =
+      options
+      |> Enum.map(fn %Struct.ApplicationCommandInteractionDataOption{name: name} = value ->
+        {name, value}
+      end)
+      |> Enum.into(%{})
+
+    key =
+      Map.fetch!(options, "key")
+      |> Map.fetch!(:value)
+
+    name =
+      Map.get(options, "name", %{})
+      |> Map.get(:value)
+
+    color =
+      Map.get(options, "color", %{})
+      |> Map.get(:value)
+      |> JllyBot.Discord.parse_color()
+
+    if name == nil do
+      Pronoun.create_default_pronoun(guild, key)
+    else
+      Pronoun.create_pronoun(guild, key, name, true, color: color)
+    end
+    |> case do
+      {:ok, %Repo.Pronoun{name: name}} ->
+        JllyBot.Gettext.dgettext("pronoun", "Successfully created `%{name}`", name: name)
+
+      {:error, {:already_exists, key}} ->
+        JllyBot.Gettext.dgettext("pronoun", "Key `%{key}` already exists. Failed to add Pronoun",
+          key: key
+        )
+    end
+  end
+
+  defp do_option(%Struct.Interaction{guild_id: guild_id}, [
+         %Struct.ApplicationCommandInteractionDataOption{name: "remove", options: options}
+       ]) do
+    options =
+      JllyBot.Discord.parse_options(options)
+      |> IO.inspect()
+
+    role =
+      options
+      |> Map.get("pronoun")
+      |> Map.get(:value)
+
+    pronoun = Pronoun.get_pronoun(guild_id, role)
+
+    Pronoun.remove_pronoun_role(pronoun)
+    |> case do
+      {:ok, %Repo.Pronoun{key: key}} ->
+        JllyBot.Gettext.dgettext("pronoun", "Successfuly removed `%{key}`", key: key)
+
+      {:error, :unknown_role} ->
+        JllyBot.Gettext.dgettext("pronoun", "Pronoun %{role} not managed by me", role: role)
+    end
+  end
+
+  defp do_option(%Struct.Interaction{guild_id: guild_id} = interaction, [
+         %Struct.ApplicationCommandInteractionDataOption{name: "remove-all"}
+       ]) do
+    Task.Supervisor.async_nolink(JllyBot.Discord.RoleUpdateSupervisor, fn ->
+      count =
+        Pronoun.get_pronouns(guild_id)
+        |> Enum.map(&Pronoun.remove_pronoun_role/1)
+        |> IO.inspect()
+        |> Enum.filter(fn
+          {:ok, _} -> true
+          _ -> false
+        end)
+        |> Enum.count()
+
+      Api.edit_interaction_response(interaction, %{
+        content: JllyBot.Gettext.dgettext("pronoun", "Removed %{count} pronouns", count: count)
+      })
+
+      nil
+    end)
+
+    %{type: 5, data: %{flags: 64}}
+  end
+
+  def do_component(key, %Struct.Interaction{
+        guild_id: guild,
+        member: %Struct.Guild.Member{roles: roles, user: %Struct.User{id: member_id}}
+      }) do
+    pronoun = JllyBot.Pronoun.get_pronoun(guild, key)
+
+    label = Pronoun.get_label(pronoun)
+
+    toogle_pronoun(guild, member_id, roles, pronoun)
+    |> case do
+      {:ok, true} ->
+        JllyBot.Gettext.dgettext("pronoun", "Added pronoun: %{pronoun}", pronoun: label)
+
+      {:ok, false} ->
+        JllyBot.Gettext.dgettext("pronoun", "Removed pronoun: %{pronoun}", pronoun: label)
+    end
+  end
+
+  def toogle_pronoun(guild_id, member_id, roles, %Repo.Pronoun{role_id: role_id})
+      when is_number(guild_id) and is_number(member_id) and is_list(roles) do
+    if Enum.member?(roles, role_id) do
+      Api.remove_guild_member_role(guild_id, member_id, role_id, "User Pronoun change")
+      |> case do
+        {:ok} -> {:ok, false}
+        v -> v
       end
     else
-      _ ->
-        "TODO"
+      Api.add_guild_member_role(guild_id, member_id, role_id, "User Pronoun change")
+      |> case do
+        {:ok} -> {:ok, true}
+        v -> v
+      end
     end
   end
 end

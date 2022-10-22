@@ -178,11 +178,37 @@ in {
 
         type = types.submodule {
           freeformType = format.type;
-          ":nostrum" = {
-            ":token" = mkOption {
-              type = secret;
-              description = "Discord bot token";
-              default = cfg.tokenFile;
+          options = {
+            ":nostrum" = {
+              ":token" = mkOption {
+                type = secret;
+                description = "Discord bot token";
+                default = cfg.tokenFile;
+              };
+            };
+            ":jlly_bot" = {
+              "JllyBot.Repo" = mkOption {
+                type = elixirValue;
+                default = {
+                  socket_dir = "/run/postgresql";
+                  username = cfg.user;
+                  database = "jlly_bot";
+                };
+                defaultText = literalExpression ''
+                  {
+                    adapter = (pkgs.formats.elixirConf { }).lib.mkRaw "Ecto.Adapters.Postgres";
+                    socket_dir = "/run/postgresql";
+                    username = config.services.jlly_bot.user;
+                    database = "jlly_bot";
+                  }
+                '';
+                description = mdDoc ''
+                  Database configuration.
+                  Refer to
+                  <https://hexdocs.pm/ecto_sql/Ecto.Adapters.Postgres.html#module-connection-options>
+                  for options.
+                '';
+              };
             };
           };
         };
@@ -198,6 +224,15 @@ in {
         isSystemUser = true;
       };
       groups."${cfg.group}" = { };
+    };
+
+    services.postgresql = {
+      enable = true;
+      ensureUsers = [{
+        name = "jlly_bot";
+        ensurePermissions."DATABASE jlly_bot" = "ALL PRIVILEGES";
+      }];
+      ensureDatabases = [ "jlly_bot" ];
     };
 
     systemd.services.jlly_bot-config = {
@@ -246,7 +281,8 @@ in {
 
         BindReadOnlyPaths = [ "/etc/hosts" "/etc/resolv.conf" ];
 
-        ExecStartPre = genScript;
+        ExecStartPre =
+          "${jlly_bot}/bin/jlly_bot eval 'JllyBot.ReleaseTasks.run(\"migrate\")'";
         ExecStart = "${jlly_bot}/bin/jlly_bot start";
 
         ProtectProc = "noaccess";
@@ -262,7 +298,7 @@ in {
         ProtectKernelLogs = true;
         ProtectControlGroups = true;
 
-        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" ];
+        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
         RestrictNamespaces = true;
         LockPersonality = true;
         RestrictRealtime = true;
