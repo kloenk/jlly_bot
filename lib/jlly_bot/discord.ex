@@ -9,18 +9,18 @@ defmodule JllyBot.Discord do
   # Commands
 
   @commands [
-    {"reset", "Reset all configs for this guild", []},
-    {"tiktok-list", "List watched tiktok accounts", []},
-    {"tiktok-sub", "Subscribe to tiktok updates on an account",
-     [
-       %{
-         # ApplicationCommandType::STRING
-         type: 3,
-         name: "account",
-         description: "Account to subscribe",
-         required: true
-       }
-     ]},
+    # {"reset", "Reset all configs for this guild", []},
+    # {"tiktok-list", "List watched tiktok accounts", []},
+    # {"tiktok-sub", "Subscribe to tiktok updates on an account",
+    # [
+    #   %{
+    #     # ApplicationCommandType::STRING
+    #     type: 3,
+    #     name: "account",
+    #     description: "Account to subscribe",
+    #     required: true
+    #   }
+    # ]},
     {"links", "Send the links", []},
     {"pronoun", "Pronoun management",
      [
@@ -85,7 +85,73 @@ defmodule JllyBot.Discord do
          ]
        }
      ]},
-    {"topic-message", "Send the Topic chooser message", []},
+    {
+      "topic",
+      "Topic management",
+      [
+        %{
+          type: 1,
+          name: "prompt",
+          description: "send promtp"
+        },
+        %{
+          type: 2,
+          name: "config",
+          description: "Topic config",
+          options: [
+            %{
+              name: "add",
+              type: 1,
+              description: "Add new topic",
+              options: [
+                %{
+                  type: 3,
+                  name: "key",
+                  description: "Key to use internaly",
+                  required: true
+                },
+                %{
+                  type: 3,
+                  name: "name",
+                  description: "Name of the Topic",
+                  required: false
+                },
+                %{
+                  type: 3,
+                  name: "color",
+                  description: "Color of the new role",
+                  required: false
+                },
+                %{
+                  type: 3,
+                  name: "description",
+                  description: "Description of the topic",
+                  required: false
+                }
+              ]
+            },
+            %{
+              name: "remove",
+              type: 1,
+              description: "Remove topic",
+              options: [
+                %{
+                  type: 3,
+                  name: "key",
+                  description: "key to delete",
+                  required: true
+                }
+              ]
+            },
+            %{
+              name: "remove-all",
+              type: 1,
+              description: "Remove all topics"
+            }
+          ]
+        }
+      ]
+    },
     {"new-patreon", "Create a new patreon post anouncement",
      [
        %{
@@ -108,12 +174,13 @@ defmodule JllyBot.Discord do
   @command_module %{
     "pronoun-message" => JllyBot.Discord.Pronoun,
     "pronoun" => JllyBot.Discord.Pronoun,
-    "topic-message" => JllyBot.Discord.Topic,
+    "topic" => JllyBot.Discord.Topic,
     "new-patreon" => JllyBot.Discord.NewContent
   }
 
   @component_module %{
-    "pronoun" => JllyBot.Discord.Pronoun
+    "pronoun" => JllyBot.Discord.Pronoun,
+    "topic" => JllyBot.Discord.Topic
   }
 
   def do_command(%{guild_id: _guild_id, data: %{name: "tiktok-list"}}) do
@@ -292,7 +359,7 @@ defmodule JllyBot.Discord do
     Api.create_interaction_response(interaction, msg)
     |> IO.inspect()
 
-    # FIXME: handle response
+    # FIXME: handle error
   end
 
   defp build_response(nil), do: %{type: 4, data: %{content: "Done", flags: 64}}
@@ -317,4 +384,6 @@ defmodule JllyBot.Discord do
     end)
     |> Enum.into(%{})
   end
+
+  def parse_color(_), do: nil
 end

@@ -11,7 +11,7 @@ defmodule JllyBot.Repo.Role do
   schema "roles" do
     field :guild_id, :integer
     field :role_id, :integer
-    field :module, Ecto.Enum, values: [{JllyBot.Pronoun, 1}]
+    field :module, Ecto.Enum, values: [{JllyBot.Pronoun, 1}, {JllyBot.Topic, 2}]
   end
 
   def create_changeset(role \\ %__MODULE__{}, attrs) do

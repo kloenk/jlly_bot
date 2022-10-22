@@ -127,9 +127,7 @@ defmodule JllyBot.Discord.Pronoun do
     color =
       Map.get(options, "color", %{})
       |> Map.get(:value)
-
-    # FIXME: parse color
-    color = nil
+      |> JllyBot.Discord.parse_color()
 
     if name == nil do
       Pronoun.create_default_pronoun(guild, key)
