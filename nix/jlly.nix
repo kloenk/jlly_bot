@@ -63,7 +63,7 @@ let
     pkgs.writeShellApplication {
       inherit name;
       text = ''
-        RELEASE_COOKIE="''${RELEASE_COOKIE:-$(<"''${RUNTIME_DIRECTORY:-/run/akkoma}/cookie")}" \
+        RELEASE_COOKIE="''${RELEASE_COOKIE:-$(<"''${RUNTIME_DIRECTORY:-/run/jlly_bot}/cookie")}" \
           exec "${cfg.package}/bin/${name}" "$@"
       '';
     };
@@ -101,7 +101,7 @@ let
   sha256 = builtins.hashString "sha256";
 
   configScript = writeShell {
-    name = "akkoma-config";
+    name = "jlly_bot-config";
     runtimeInputs = with pkgs; [ coreutils replace-secret ];
     text = ''
       cd "$RUNTIME_DIRECTORY"
@@ -273,7 +273,7 @@ in {
         Group = cfg.group;
         UMask = "0077";
 
-        RuntimeDirectory = "akkoma";
+        RuntimeDirectory = "jlly_bot";
         RuntimeDirectoryMode = "0711";
         RuntimeDirectoryPreserve = true;
         StateDirectory = "jlly_bot";
