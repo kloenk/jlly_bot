@@ -168,6 +168,28 @@ defmodule JllyBot.Discord do
          description: "Post title/description of the new post",
          required: false
        }
+     ]},
+    {"tiktok", "Tiktok anouncements",
+     [
+       %{
+         type: 1,
+         name: "live",
+         description: "Anounce a new tiktok live",
+         options: [
+           %{
+             type: 3,
+             name: "description",
+             description: "Description of the live stream",
+             required: false
+           },
+           %{
+             type: 3,
+             name: "link",
+             description: "Link to live stream",
+             required: false
+           }
+         ]
+       }
      ]}
   ]
 
@@ -175,7 +197,8 @@ defmodule JllyBot.Discord do
     "pronoun-message" => JllyBot.Discord.Pronoun,
     "pronoun" => JllyBot.Discord.Pronoun,
     "topic" => JllyBot.Discord.Topic,
-    "new-patreon" => JllyBot.Discord.NewContent
+    "new-patreon" => JllyBot.Discord.NewContent,
+    "tiktok" => JllyBot.Discord.TikTok
   }
 
   @component_module %{
@@ -362,19 +385,19 @@ defmodule JllyBot.Discord do
     # FIXME: handle error
   end
 
-  defp build_response(nil), do: %{type: 4, data: %{content: "Done", flags: 64}}
-  defp build_response(map) when is_map(map), do: map
-
-  defp build_response(message) when is_binary(message) do
-    %{type: 4, data: %{content: message, flags: 64}}
-  end
-
-  @impl true
+  @impl Nostrum.Consumer
   def handle_event(event) do
     # event
     # |> IO.inspect()
 
     :noop
+  end
+
+  defp build_response(nil), do: %{type: 4, data: %{content: "Done", flags: 64}}
+  defp build_response(map) when is_map(map), do: map
+
+  defp build_response(message) when is_binary(message) do
+    %{type: 4, data: %{content: message, flags: 64}}
   end
 
   def parse_options(options) when is_list(options) do
