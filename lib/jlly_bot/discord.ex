@@ -190,6 +190,28 @@ defmodule JllyBot.Discord do
            }
          ]
        }
+     ]},
+    {"instagram", "Instagram anouncements",
+     [
+       %{
+         type: 1,
+         name: "live",
+         description: "Anounce a new instagram live",
+         options: [
+           %{
+             type: 3,
+             name: "description",
+             description: "Description of the live stream",
+             required: false
+           },
+           %{
+             type: 3,
+             name: "link",
+             description: "Link to live stream",
+             required: false
+           }
+         ]
+       }
      ]}
   ]
 
@@ -198,7 +220,8 @@ defmodule JllyBot.Discord do
     "pronoun" => JllyBot.Discord.Pronoun,
     "topic" => JllyBot.Discord.Topic,
     "new-patreon" => JllyBot.Discord.NewContent,
-    "tiktok" => JllyBot.Discord.TikTok
+    "tiktok" => JllyBot.Discord.TikTok,
+    "instagram" => JllyBot.Discord.Instagram
   }
 
   @component_module %{
