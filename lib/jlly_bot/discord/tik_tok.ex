@@ -6,7 +6,7 @@ defmodule JllyBot.Discord.TikTok do
   import Nostrum.Struct.Embed
 
   @mention_role 1_033_500_549_619_916_820
-  @default_link "https://www.tiktok.com/@escapetheaverage/live"
+  @default_link "https://www.tiktok.com/@jessyundbilly/live"
 
   def do_command(
         "tiktok",
