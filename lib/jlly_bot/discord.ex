@@ -257,39 +257,39 @@ defmodule JllyBot.Discord do
     tiktok =
       %Nostrum.Struct.Embed{}
       |> put_title("TikTok 🎬")
-      |> put_url("https://www.tiktok.com/@escapetheaverage")
+      |> put_url("https://www.tiktok.com/@jessyundbilly")
       |> put_color(0x00F2EA)
 
     twitch =
       %Nostrum.Struct.Embed{}
       |> put_title("Twitch 🎮")
-      |> put_url("https://www.twitch.tv/escapetheaverage")
+      |> put_url("https://www.twitch.tv/jessyundbilly")
       |> put_color(0x6441A5)
 
     patreon =
       %Nostrum.Struct.Embed{}
       |> put_title("Patreon")
       |> put_description("more content & stories 🏳️‍🌈")
-      |> put_url("https://www.patreon.com/escapetheaverage")
+      |> put_url("https://www.patreon.com/jessyundbilly")
       # |> put_image("https://c5.patreon.com/external/logo/guidelines/logo-standard-lockups.png")
       |> put_color(0xFF424D)
 
     youtube =
       %Nostrum.Struct.Embed{}
       |> put_title("Youtube")
-      |> put_url("https://www.youtube.com/channel/UCCAUZS7xFqN7GoCbHBWxx5g")
+      |> put_url("https://www.youtube.com/@jessyundbilly")
       |> put_color(0xFF0000)
 
     insta_billy =
       %Nostrum.Struct.Embed{}
       |> put_title("Billys Instagram")
-      |> put_url("https://www.instagram.com/billiard_zweilash/")
+      |> put_url("https://www.instagram.com/tigerbillzz/")
       |> put_color(0xC13584)
 
     insta_jessy =
       %Nostrum.Struct.Embed{}
       |> put_title("Jessys Instagram")
-      |> put_url("https://www.instagram.com/jesso_zweilash/")
+      |> put_url("https://www.instagram.com/ehrenpandii/")
       |> put_color(0xC13584)
 
     spotify =
